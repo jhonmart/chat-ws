@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chat</title>
+</head>
+
+<body>
+  <input type="text" id="yourName" placeholder="Your Name Here" onchange="changeName(this)" />
+  <form id="chat">
+    <input type="number" id="toName" placeholder="Para">
+    <textarea type="text" id="text"></textarea>
+    <button type="submit">Enviar</button>
+  </form>
+
+  <ul id="usuarios"></ul>
+  <div id="msg"></div>
+
+  <script>
+    const wsClient = new WebSocket(`ws://${location.hostname}:3000`);
+    let list_names = [];
+    let mensagens = [];
+    wsClient.onopen = function (e) {
+      console.info("[open] Connection established");
+      console.info("Sending to server");
+      // wsClient.send("Teste mensagem");
+    };
+
+    wsClient.onmessage = function (event) {
+      try {
+        if (event) {
+          const response = JSON.parse(event.data);
+          if (Array.isArray(response)) {
+            const list = response.map(
+              user => `<li class="${user.you ? "youItem" : "notYou"}">${user.name}</li>`
+            );
+            usuarios.innerHTML = list.join("");
+            list_names = response;
+          } else {
+            response.msg && mensagens.push(response);
+          }
+          drawMSG();
+        }
+      } catch (error) {
+        console.log(`[message] Data received from server: ${event.data}`, error);
+      }
+    };
+
+    wsClient.onclose = function (event) {
+      if (event.wasClean) {
+        console.warn(
+          `[close] Connection closed cleanly, code=${event.code} reason=${event.reason}`
+        );
+      } else {
+        console.warn("[close] Connection died");
+      }
+    };
+
+    wsClient.onerror = function (error) {
+      console.error(`[error] ${error.message}`);
+    };
+
+    function changeName(event) {
+      wsClient.send(JSON.stringify({ name: event.value }));
+    }
+
+    function sendMSG(event) {
+      event && event.preventDefault();
+      if (toName.value.length && text.value.length) {
+        const user = list_names.map((user, id) => ({ id, ...user})).find(user => user.you).id;
+        wsClient.send(JSON.stringify({ user: toName.value, msg: text.value }));
+        mensagens.push({ user, msg: text.value, you: true })
+        drawMSG();
+        text.value = "";
+      }
+    }
+
+    function drawMSG() {
+      msg.innerHTML = mensagens
+      .map(item =>
+        `<div class="${item.you ? "youItem" : "notYou"}">${list_names[item.user].name}: ${item.msg}</div>`
+      )
+      .join("");
+    }
+
+    chat.addEventListener("submit", sendMSG);
+  </script>
+  <style>
+    .youItem {
+      color: rgb(6, 71, 6);
+    }
+    .notYou {
+      color: rgb(37, 37, 37);
+    }
+  </style>
+</body>
+
+</html>
