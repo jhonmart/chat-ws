@@ -1,0 +1,23 @@
+version: '2'
+
+services:
+  web:
+    build:
+      dockerfile: Dockerfile
+      context: .
+    command: "start"
+    volumes:
+      - .:/usr/src/app/
+      - /usr/src/app/node_modules
+    ports:
+      - "3000:3000"
+
+  nginx:
+    image: nginx
+    volumes:
+      - ./public:/var/www/public
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+    ports:
+      - "80:80"
+    environment:
+      - NGINX_PORT=80

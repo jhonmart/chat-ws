@@ -39,9 +39,17 @@ body{
     border-radius: 3px
 }
 
-.people-list .chat-list li:hover {
+.people-list .chat-list li:hover, .people-list .chat-list li.select_user {
     background: #efefef;
     cursor: pointer
+}
+
+.input-group-prepend {
+    cursor: pointer
+}
+
+#your_name {
+    border: 0;
 }
 
 .people-list .chat-list li.active {
@@ -169,7 +177,7 @@ body{
 
 .chat .chat-history .other-message:after {
     border-bottom-color: #e8f1f3;
-    left: 93%
+    left: 70%
 }
 
 .chat .chat-message {

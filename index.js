@@ -8,39 +8,35 @@ const list_user = [];
 const list_name = [];
 const PORT = 3000;
 
-const returnName = (id, name) =>
-  `${name || "Não definido"} #0000`.replace(
-    RegExp(".".repeat(id.toString().length) + "$"),
-    id
-  );
-
 const sendForAllNames = () => {
   list_user.map((user, index_user) => {
     const name_users = list_name.map((name, index_name) => ({
-      name: returnName(index_name, name),
+      name: name || "Não definido",
       you: index_user === index_name,
+      id: index_name
     }));
     user.send(JSON.stringify(name_users));
   });
 };
 
 app.ws("/", function (ws, req) {
-  ws.on("message", function (msg) {
+  ws.on("message", function (message) {
     try {
-      const data = JSON.parse(msg);
-      if (data.user) {
+      const data = JSON.parse(message);
+      if (data.user >= 0) {
+        const date = Date.now();
         list_user[data.user].send(
           JSON.stringify({
-            msg: data.msg,
+            message: data.message,
             user: list_user.indexOf(ws),
-            date: Date.now(),
+            date,
           })
         );
         ws.send(
           JSON.stringify({
             success: "send message",
             user: list_user.indexOf(ws),
-            date: Date.now(),
+            date,
           })
         );
       } else if (data.name) {
